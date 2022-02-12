@@ -1,3 +1,4 @@
-A c G H i
-? 9 0 2 ( ) ] [
-, ;; < <= 564
+let
+  x := map x to f(true);
+in
+  1
