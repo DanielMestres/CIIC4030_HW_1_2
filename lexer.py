@@ -2,7 +2,11 @@
 # Daniel Mestres Pinero_802-15-4744
 # CIIC4030-036
 # Assignment_1_Scanner
-# To run: python3 lexer.py "input file name"
+# Run:
+#   python3 lexer.py "input file name"
+# References:
+#   https://www.dabeaz.com/ply/ply.html
+#   https://www.skenz.it/compilers/ply
 # --------------------------------------------------------
 from ply import lex as lex
 from ply.lex import TOKEN
@@ -22,30 +26,40 @@ keywords = {
     'false' : 'FALSE'
 }
 
-# Token names
+# Token names TODO: 
 tokens = [
-    'ID',
-    'NUMBER', 'PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'LPAREN', 'RPAREN'
-] + list(keywords.values()) # Adds reserved words
+    'LOWER',
+    'UPPER',
+    'OTHER',
+    'DIGIT',
+    'ALPHA',
+    'ALPHAOTHER',
+    'ALPHAOTHERNUMERIC',
+    'DELIMITER',
+    'OPERATOR',
+    'INT'
+] + list(keywords.values()) # Adds keywords
 
-# Regular expression rules for simple tokens
-t_PLUS = r'\+'
-t_MINUS = r'-'
-t_TIMES = r'\*'
-t_DIVIDE = r'/'
-t_LPAREN = r'\('
-t_RPAREN = r'\)'
+# Regular expression rules
 t_ignore  = ' \t'
+t_LOWER = r'([a-z])'
+t_UPPER = r'([A-Z])'
+t_OTHER = r'\?' # TODO: Add other characters
+t_DIGIT = r'([0-9])'
+t_ALPHA = r'(' + t_UPPER + r'|' + t_LOWER + r')'
+t_ALPHAOTHER = r'(' + t_ALPHA + r'|' + t_OTHER + r')'
+t_ALPHAOTHERNUMERIC = r'(' + t_ALPHAOTHER + r'|' + t_DIGIT + r')'
+t_DELIMITER = r'(' + r'\(' + r'|' + r'\)' + r'|' + r'\[' + r'|' + r'\]' + r'|' + r'\,' + r'|' + r'\;' + r')'
 
-def t_ID(t):
-    r'[a-zA-Z_][a-zA-Z_0-9]*'
-    t.type = keywords.get(t.value,'ID')    # Check for reserved words
+def t_OPERATOR(t):
+    # TODO: Distinguish double characters, such as "<=" and "<"
+    r'\<'
     return t
 
-# Regular expression rules for other tokens
-def t_NUMBER(t):
-    r'\d+'
-    t.value = int(t.value)
+@TOKEN(t_DIGIT)
+def t_INT(t):
+    # TODO: Implement Digit+
+    r'(' + t_DIGIT + r'*' + r')' 
     return t
 
 # Define a rule so we can track line numbers
