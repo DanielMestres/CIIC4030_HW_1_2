@@ -3,7 +3,7 @@
 # CIIC4030-036
 # Assignment_1_Scanner
 # Run: (Linux)
-#   python3 lexer.py "input file name"
+#   python3 lexer.py input_file_name
 # References:
 #   https://www.dabeaz.com/ply/ply.html
 #   https://www.skenz.it/compilers/ply
@@ -46,18 +46,18 @@ tokens = [
 
     'ID',
     'KEYWORD',
+    'NULL',
+    'BOOL',
+    'PRIM',
 
     'SYMBOL',
     'DELIMITER',
-    'NULL',
-    'BOOL',
     'UNOP',
     'SIGN',
-    'BINOP',
-    'PRIM'
+    'BINOP'
 ]
 
-# regex rules
+# Rules
 def t_newline(t):
     r'\n+'
     t.lexer.lineno += len(t.value)
@@ -106,7 +106,7 @@ with data as fp:
             lexer.input(line)
  
             for tok in lexer:
-                # print(tok.type, tok.value, tok.lineno) ?
+                # print(tok.type, tok.value, tok.lineno)
                 print(tok)
         except EOFError:
             break
