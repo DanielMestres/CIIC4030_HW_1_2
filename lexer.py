@@ -9,6 +9,7 @@
 #   https://www.skenz.it/compilers/ply
 # --------------------------------------------------------
 from ply import lex as lex
+# from ply import yacc as yacc
 import sys
 
 # List of reserved words
@@ -22,22 +23,8 @@ words = {
     'number?'   : 'PRIM', 'function?' : 'PRIM',
     'list?'     : 'PRIM', 'null?'     : 'PRIM',
     'cons?'     : 'PRIM', 'cons'      : 'PRIM',
-    'first'     : 'PRIM', 'rest'      : 'PRIM'
-}
-
-# List of reserved symbols
-symbols = {
-    '(' : 'DELIMITER',      ')' : 'DELIMITER',
-    '[' : 'DELIMITER',      ']' : 'DELIMITER',
-    ',' : 'DELIMITER',      ';' : 'DELIMITER',
-
-    '+'     : 'SIGN',       '-' : 'SIGN',
-    '~'     : 'UNOP',       '*' : 'BINOP',
-    '/'     : 'BINOP',      '=' : 'BINOP',
-    '!='    : 'BINOP',      '<' : 'BINOP',
-    '>'     : 'BINOP',      '<=' : 'BINOP',
-    '>='    : 'BINOP',      '&' : 'BINOP',
-    '|'     : 'BINOP',      ':=' : 'BINOP'
+    'first'     : 'PRIM', 'rest'      : 'PRIM',
+    'arity'     : 'PRIM'
 }
 
 # Token names
@@ -50,10 +37,8 @@ tokens = [
     'BOOL',
     'PRIM',
 
-    'SYMBOL',
     'DELIMITER',
     'UNOP',
-    'SIGN',
     'BINOP'
 ]
 
@@ -71,9 +56,10 @@ def t_error(t):
     t.lexer.skip(1)
 
 t_ignore  = ' \t'
-
-# Digit+
 t_INT = r'\d+'
+t_DELIMITER = '\(|\)|\[|\]|\,|\;'
+t_UNOP = '\+|\-|\~'
+t_BINOP = '\*|\/|\=|\!=|\<|\>|\<=|\>=|\&|\||\:='
 
 # AlphaOther {AlphaOtherNumeric}*
 def t_ID(t):
@@ -82,22 +68,11 @@ def t_ID(t):
     t.type = words.get(t.value, 'ID')
     return t
 
-# {Delimiter | Operator} {Delimiter | Operator}*
-def t_SYMBOL(t):
-    r'[^a-zA-Z0-9_?_\n][^a-zA-Z0-9_?_;_\n_\s]*'
-    # Checks for reserved symbols
-    t.type = symbols.get(t.value, 'SYMBOL')
-    # Returns an error if symbol is not recognized
-    if(t.type == 'SYMBOL'):
-        t_error(t)
-    else:
-        return t
+# Build lexer
+lexer = lex.lex()
 
 # Read input
 data = open(sys.argv[1])
-
-# Build lexer
-lexer = lex.lex()
 
 # Tokenize
 with data as fp:
@@ -110,3 +85,8 @@ with data as fp:
                 print(tok)
         except EOFError:
             break
+
+# Parser grammar rules
+
+
+# build parser
