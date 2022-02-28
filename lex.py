@@ -3,7 +3,7 @@
 # CIIC4030-036
 # Assignment_1_Scanner
 # Run: (Linux)
-#   python3 lexer.py input_file_name
+#   python3 file_name.py input_file_name
 # References:
 #   https://www.dabeaz.com/ply/ply.html
 #   https://www.skenz.it/compilers/ply
@@ -78,13 +78,8 @@ with data as fp:
     for line in fp:
         try:
             lexer.input(line)
-
-            for token in lexer:
-                print(token)
         except EOFError:
             break
-
-###############################_FIX_###################################
 
 # Sets precedence of tokens for parser
 precedence = (
@@ -93,93 +88,113 @@ precedence = (
 )
 
 # Parser grammar rules
+def p_exp(p):
+    #  p[0]  p[1]  p[2]  p[3]    p[4] p[5]    p[6]
+    '''exp : term UNOP exp
+            | term BINOP exp
+            | KEYWORD exp KEYWORD exp KEYWORD exp
+            | KEYWORD def KEYWORD exp
+            | KEYWORD idlist KEYWORD exp'''
 
-# Expressions
-def p_exp_binop(p):
-    'exp : term BINOP exp'
-    if p[2] == '*':
-        p[0] = p[1] * p[3]
-    elif p[2] == '/':
-        p[0] = p[1] / p[3]
-
-def p_exp_unop(p):
-    'exp : term UNOP exp'
     if p[2] == '+':
         p[0] = p[1] + p[3]
     elif p[2] == '-':
         p[0] = p[1] - p[3]
 
-def p_exp_if(p):
-    'exp : KEYWORD exp KEYWORD exp KEYWORD exp'
+    # TODO Implement rules for term BINOP exp
+    #
+
     if p[1] == 'if' & p[3] == 'then' & p[5] == 'else':
-        if p[2] == true:
+        if p[2]:
             p[0] = p[4]
         else:
             p[0] = p[6]
-    else:
-        p_error(p)
 
-def p_exp_let(p):
-    'exp : KEYWORD def KEYWORD exp'
+    # TODO Implement rules for KEYWORD def KEYWORD exp
+    # if p[1] == 'let' & p[3] == 'in':
 
-def p_exp_map(p):
-    'exp : KEYWORD idlist KEYWORD exp'
+    # TODO Implement rules for KEYWORD idlist KEYWORD exp
+    # if p[1] == 'map' & p[3] == 'to':
 
 
-# Terms
-def p_term_unop(p):
-    'term : UNOP term'
+def p_term(p):
+    #  p[0]   p[1] p[2]         p[3]    p[4]
+    '''term : UNOP term
+            | factor DELIMITER explist DELIMITER
+            | NULL
+            | INT
+            | BOOL'''
 
-def p_term_fact(p):
-    'term : factor DELIMITER explist DELIMITER'
+    # TODO Implement rules for UNOP term
+    #
 
-def p_term_null(p):
-    'term : NULL'
+    # TODO Implement rules for factor DELIMITER explist DELIMITER
+    #
 
-def p_term_int(p):
-    'term : INT'
+    if p[1] == 'null':
+        p[0] = None
 
-def p_term_bool(p):
-    'term : BOOL'
+    if isinstance(p[1], (int, bool)):
+        p[0] = p[1]
 
+def p_factor(p):
+    #   p[0]     p[1]    p[2]  p[3]
+    '''factor : DELIMITER exp DELIMITER
+                | PRIM
+                | ID'''
 
-# Factors
-def p_factor_exp(p):
-    'factor : DELIMITER exp DELIMITER'
+    # TODO Implement rules for DELIMITER exp DELIMITER
+    #
 
-def p_factor_prim(p):
-    'factor : PRIM'
+    # TODO Implement rules for PRIM
+    #
 
-def p_factor_id(p):
-    'factor : ID'
-
+    # TODO Implement rules for ID
+    #
 
 def p_explist(p):
-    'explist : propexplist'
+    #  p[0]     p[1]
+    'explist : DELIMITER propexplist DELIMITER'
 
-# PropExpLists
-def p_propexplist_exp(p):
-    'propexplist : exp'
+    # TODO Implement rules for propexplist
+    #
 
-def p_propexplist_self(p):
-    'propexplist : exp DELIMITER propexplist'
+def p_propexplist(p):
+    #    p[0]       p[1]   p[2]      p[3]
+    '''propexplist : exp
+                    | exp DELIMITER propexplist'''
 
+    # TODO Implement rules for exp
+    #
+
+    # TODO Implement rules for exp DELIMITER propexplist
+    #
 
 def p_idlist(p):
-    'idlist : propidlist'
+    #  p[0]    p[1]
+    'idlist : DELIMITER propidlist DELIMITER'
 
-# PropIdLists
-def p_propidlist_list(p):
-    'propidlist : ID'
+    # TODO Implement rules for DELIMITER propidlist DELIMITER
+    #
 
-def p_propidlist_self(p):
-    'propidlist : ID DELIMITER propidlist'
+def p_propidlist(p):
+    #   p[0]       p[1]   p[2]      p[3]
+    '''propidlist : ID
+                    | ID DELIMITER propidlist'''
 
+    # TODO Implement rules for ID
+    #
+
+    # TODO Implement rules for ID DELIMITER propidlist
+    #
 
 def p_def(p):
-    'def : ID BINOP exp'
-    if p[2] == ':=':
-       p[0] = p[1] = p[3]
+    # p[0] p[1] p[2] p[3] p[4]
+    'def : ID BINOP exp DELIMITER'
+
+    if p[2] == ':=' & p[4] == ';':
+        p[1] = p[3]
+        p[0] = p[1]
 
 # Error rule for syntax errors
 def p_error(p):
