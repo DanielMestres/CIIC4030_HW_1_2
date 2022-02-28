@@ -68,74 +68,32 @@ def t_ID(t):
     t.type = words.get(t.value, 'ID')
     return t
 
-# Build lexer
-lexer = lex.lex()
-
-# Read input
-data = open(sys.argv[1])
-
-with data as fp:
-    for line in fp:
-        try:
-            lexer.input(line)
-        except EOFError:
-            break
-
 # Sets precedence of tokens for parser
-precedence = (
-    ('left', 'UNOP'),
-    ('left', 'BINOP')
-)
+# precedence = (
+#     ('left', 'UNOP'),
+#     ('left', 'BINOP')
+# )
 
 # Parser grammar rules
 def p_exp(p):
     #  p[0]  p[1]  p[2]  p[3]    p[4] p[5]    p[6]
-    '''exp : term UNOP exp
+    '''exp : term
+            | term UNOP exp
             | term BINOP exp
             | KEYWORD exp KEYWORD exp KEYWORD exp
-            | KEYWORD def KEYWORD exp
-            | KEYWORD idlist KEYWORD exp'''
-
-    if p[2] == '+':
-        p[0] = p[1] + p[3]
-    elif p[2] == '-':
-        p[0] = p[1] - p[3]
-
-    # TODO Implement rules for term BINOP exp
-    #
-
-    if p[1] == 'if' & p[3] == 'then' & p[5] == 'else':
-        if p[2]:
-            p[0] = p[4]
-        else:
-            p[0] = p[6]
-
-    # TODO Implement rules for KEYWORD def KEYWORD exp
-    # if p[1] == 'let' & p[3] == 'in':
-
-    # TODO Implement rules for KEYWORD idlist KEYWORD exp
-    # if p[1] == 'map' & p[3] == 'to':
-
+            | KEYWORD deflist KEYWORD exp
+            | KEYWORD idlist KEYWORD exp
+            | KEYWORD KEYWORD exp'''
 
 def p_term(p):
     #  p[0]   p[1] p[2]         p[3]    p[4]
     '''term : UNOP term
-            | factor DELIMITER explist DELIMITER
+            | factor
+            | DELIMITER explist DELIMITER
+            | factor DELIMITER DELIMITER
             | NULL
             | INT
             | BOOL'''
-
-    # TODO Implement rules for UNOP term
-    #
-
-    # TODO Implement rules for factor DELIMITER explist DELIMITER
-    #
-
-    if p[1] == 'null':
-        p[0] = None
-
-    if isinstance(p[1], (int, bool)):
-        p[0] = p[1]
 
 def p_factor(p):
     #   p[0]     p[1]    p[2]  p[3]
@@ -143,69 +101,45 @@ def p_factor(p):
                 | PRIM
                 | ID'''
 
-    # TODO Implement rules for DELIMITER exp DELIMITER
-    #
-
-    # TODO Implement rules for PRIM
-    #
-
-    # TODO Implement rules for ID
-    #
-
 def p_explist(p):
     #  p[0]     p[1]
-    'explist : DELIMITER propexplist DELIMITER'
-
-    # TODO Implement rules for propexplist
-    #
+    'explist : propexplist'
 
 def p_propexplist(p):
     #    p[0]       p[1]   p[2]      p[3]
     '''propexplist : exp
                     | exp DELIMITER propexplist'''
 
-    # TODO Implement rules for exp
-    #
-
-    # TODO Implement rules for exp DELIMITER propexplist
-    #
-
 def p_idlist(p):
     #  p[0]    p[1]
-    'idlist : DELIMITER propidlist DELIMITER'
-
-    # TODO Implement rules for DELIMITER propidlist DELIMITER
-    #
+    'idlist : propidlist'
 
 def p_propidlist(p):
     #   p[0]       p[1]   p[2]      p[3]
     '''propidlist : ID
                     | ID DELIMITER propidlist'''
 
-    # TODO Implement rules for ID
-    #
-
-    # TODO Implement rules for ID DELIMITER propidlist
-    #
-
 def p_def(p):
     # p[0] p[1] p[2] p[3] p[4]
     'def : ID BINOP exp DELIMITER'
 
-    if p[2] == ':=' & p[4] == ';':
-        p[1] = p[3]
-        p[0] = p[1]
+def p_deflist(p):
+    #   p[0]    p[1]  p[2]
+    '''deflist : def deflist
+                | def'''
 
 # Error rule for syntax errors
 def p_error(p):
-    print("Syntax error in input!")
+    if p:
+        print("Syntax error in input!", p)
+        parser.errok()
+    else:
+        print("Syntax error at EOF")
 
-# build parser
+# build lexer and parser
+lexer = lex.lex()
 parser = yacc.yacc()
 
-with data as fp:
-    for line in fp:
-        try:
-            parser.parse(line)
-        except EOFError:
-            break
+# Read input
+data = open(sys.argv[1])
+parser.parse(data.read())
