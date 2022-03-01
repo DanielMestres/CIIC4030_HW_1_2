@@ -3,7 +3,7 @@
 # CIIC4030-036
 # Assignment_1_Scanner
 # Run: (Linux)
-#   python3 file_name.py input_file_name
+#   python3 parser.py input_file_name
 # References:
 #   https://www.dabeaz.com/ply/ply.html
 #   https://www.skenz.it/compilers/ply
@@ -43,29 +43,10 @@ tokens = [
     'BOOL',
     'PRIM',
 
-    'LPAREN',
-    'RPAREN',
-    'LBRACKET',
-    'RBRACKET',
-    'COMMA',
-    'SEMICOLON',
-
+    'DELIMITER',
     'PLUS',
     'MINUS',
-    'TILDE',
-
-    'TIMES',
-    'DIVIDE',
-    'POWER',
-    'EQUAL',
-    'NEQUAL',
-    'LESS',
-    'MORE',
-    'LESSEQ',
-    'MOREEQ',
-    'AND',
-    'OR',
-    'ASSIGN'
+    'BINOP'
 ]
 
 # Rules
@@ -83,27 +64,10 @@ def t_error(t):
 
 t_ignore  = ' \t'
 t_INT = r'\d+'
-t_LPAREN = r'\('
-t_RPAREN = r'\)'
-t_LBRACKET = r'\['
-t_RBRACKET = r'\]'
-t_COMMA = r'\,'
-t_SEMICOLON = r'\;'
+t_DELIMITER = r'\(|\)|\[|\]|\,|\;'
 t_PLUS = r'\+'
-t_MINUS = r'-'
-t_TILDE = r'\~'
-t_TIMES = r'\*'
-t_DIVIDE = r'\/'
-t_POWER = r'\^'
-t_EQUAL = r'\='
-t_NEQUAL = r'\!='
-t_LESS = r'\<'
-t_MORE = r'\>'
-t_LESSEQ = r'\<='
-t_MOREEQ = r'\>='
-t_AND = r'\&'
-t_OR = r'\|'
-t_ASSIGN = r'\:='
+t_MINUS = r'\-'
+t_BINOP = r'\~|\*|\/|\=|\!=|\<|\>|\<=|\>=|\&|\||\:='
 
 # AlphaOther {AlphaOtherNumeric}*
 def t_ID(t):
@@ -112,88 +76,58 @@ def t_ID(t):
     t.type = words.get(t.value, 'ID')
     return t
 
-# Sets precedence of tokens for parser
-precedence = (
-     ('nonassoc', 'LESS', 'MORE'),
-     ('left', 'PLUS', 'MINUS'),
-     ('left', 'TIMES', 'DIVIDE'),
-     ('left', 'POWER'),
-     ('right', 'UMINUS')
-)
-
 # Parser grammar rules
 def p_exp(p):
     '''exp : term
             | term PLUS exp
             | term MINUS exp
-            | term TIMES exp
-            | term DIVIDE exp
-            | term POWER exp
-            | term EQUAL exp
-            | term NEQUAL exp
-            | term LESS exp
-            | term MORE exp
-            | term LESSEQ exp
-            | term MOREEQ exp
-            | term AND exp
-            | term OR exp
-            | term ASSIGN exp
-
+            | term BINOP exp
             | IF exp THEN exp ELSE exp
             | LET defplus IN exp
+            | IN exp
             | MAP idlist TO exp
             | MAP TO exp'''
     pass
 
 def p_term(p):
-    '''term : MINUS term %prec UMINUS
-            | TILDE term %prec UMINUS
-            | PLUS term
-            | TIMES term
-            | DIVIDE term
-            | EQUAL term
-            | NEQUAL term
-            | LESS term
-            | MORE term
-            | LESSEQ term
-            | MOREEQ term
-            | AND term
-            | OR term
-
-            | factor LPAREN explist RPAREN
+    '''term : factor
+            | BINOP term
+            | MINUS term
+            | factor DELIMITER explist DELIMITER
             | NULL
             | INT
             | BOOL'''
 
 def p_factor(p):
-    '''factor : LPAREN exp RPAREN
+    '''factor : DELIMITER exp DELIMITER
                 | PRIM
                 | ID'''
     pass
 
 def p_explist(p):
-    'explist : propexplist'
+    '''explist : propexplist'''
     pass
 
 def p_propexplist(p):
     '''propexplist : exp
-                    | exp COMMA propexplist'''
+                    | exp DELIMITER propexplist'''
     pass
 
 def p_idlist(p):
-    'idlist : propidlist'
+    '''idlist : propidlist'''
 
 def p_propidlist(p):
     '''propidlist : ID
-                    | ID COMMA propidlist'''
+                    | ID DELIMITER propidlist'''
     pass
 
 def p_defplus(p):
-    '''defplus : def defplus
-                | def'''
+    '''defplus : def
+                | def defplus'''
+    pass
 
 def p_def(p):
-    'def : ID ASSIGN exp SEMICOLON'
+    '''def : ID BINOP exp DELIMITER'''
     pass
 
 # Error rule for syntax errors
@@ -201,8 +135,6 @@ def p_error(p):
     if p:
         print("Syntax error in input!", p, "line:", p.lexer.lineno)
         parser.errok()
-    else:
-        print("Syntax error at EOF")
 
 # Set up a logging object
 import logging
@@ -214,17 +146,10 @@ logging.basicConfig(
 )
 log = logging.getLogger()
 
-# read input and build parser and lexer
-data = open(sys.argv[1])
 lexer = lex.lex()
 parser = yacc.yacc(debug=True, debuglog=log)
-lexer.input(data)
 
-while True:
-    try:
-        s = input(data)
-    except EOFError:
-        break
-    if not s: continue
-    result = parser.parse(s, debug=True)
-    print(result)
+# Read input
+data = open(sys.argv[1])
+
+parser.parse(data.read())
