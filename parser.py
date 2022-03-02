@@ -1,7 +1,7 @@
 # --------------------------------------------------------
 # Daniel Mestres Pinero_802-15-4744
 # CIIC4030-036
-# Assignment_1_Scanner
+# Assignment_1_&_2_Scanner_&_Parser
 # Run: (Linux)
 #   python3 parser.py input_file_name
 # References:
@@ -11,14 +11,18 @@
 from ply import lex as lex
 from ply import yacc as yacc
 import sys
+import logging
 
-# List of reserved words
+##########################_Scanner_#############################
+
+# Reserved words map ('word' : 'TOKEN')
 words = {
     'if'    : 'IF',    'then'  : 'THEN',
-    'else'  : 'ELSE',    'map'   : 'MAP',
+    'else'  : 'ELSE',  'map'   : 'MAP',
     'to'    : 'TO',    'let'   : 'LET',
     'in'    : 'IN',    'null'  : 'NULL',
-    'true'  : 'BOOL',       'false' : 'BOOL',
+
+    'true'  : 'BOOL',  'false' : 'BOOL',
 
     'number?'   : 'PRIM', 'function?' : 'PRIM',
     'list?'     : 'PRIM', 'null?'     : 'PRIM',
@@ -27,7 +31,7 @@ words = {
     'arity'     : 'PRIM'
 }
 
-# Token map
+# Token list
 tokens = [
     'INT',
 
@@ -76,58 +80,78 @@ def t_ID(t):
     t.type = words.get(t.value, 'ID')
     return t
 
+##########################_Parser_##############################
+
 # Parser grammar rules
 def p_exp(p):
+    #  p[0]  p[1] p[2] p[3] p[4] p[5] p[6]
     '''exp : term
-            | term PLUS exp
-            | term MINUS exp
-            | term BINOP exp
-            | IF exp THEN exp ELSE exp
-            | LET defplus IN exp
-            | IN exp
-            | MAP idlist TO exp
-            | MAP TO exp'''
+           | term PLUS exp
+           | term MINUS exp
+           | term BINOP exp
+           | IF exp THEN exp ELSE exp
+           | LET defplus IN exp
+           | IN exp
+           | MAP idlist TO exp
+           | MAP TO exp
+    '''
     pass
 
 def p_term(p):
+    #  p[0]   p[1]   p[2]      p[3]    p[4]
     '''term : factor
             | BINOP term
             | MINUS term
             | factor DELIMITER explist DELIMITER
             | NULL
             | INT
-            | BOOL'''
+            | BOOL
+    '''
 
 def p_factor(p):
+    #  p[0]     p[1]     p[2]  p[3]
     '''factor : DELIMITER exp DELIMITER
-                | PRIM
-                | ID'''
+              | PRIM
+              | ID
+    '''
     pass
 
 def p_explist(p):
-    '''explist : propexplist'''
+    #   p[0]      p[1]
+    '''explist : propexplist
+    '''
     pass
 
 def p_propexplist(p):
+    #   p[0]        p[1]  p[2]      p[3]
     '''propexplist : exp
-                    | exp DELIMITER propexplist'''
+                   | exp DELIMITER propexplist
+    '''
     pass
 
 def p_idlist(p):
-    '''idlist : propidlist'''
+    #  p[0]      p[1]
+    '''idlist : propidlist
+    '''
 
 def p_propidlist(p):
+    #   p[0]       p[1]  p[2]     p[3]
     '''propidlist : ID
-                    | ID DELIMITER propidlist'''
+                  | ID DELIMITER propidlist
+    '''
     pass
 
 def p_defplus(p):
+    #   p[0]    p[1]  p[2]
     '''defplus : def
-                | def defplus'''
+               | def defplus
+    '''
     pass
 
 def p_def(p):
-    '''def : ID BINOP exp DELIMITER'''
+    #  p[0] p[1] p[2] p[3] p[4]
+    '''def : ID BINOP exp DELIMITER
+    '''
     pass
 
 # Error rule for syntax errors
@@ -136,8 +160,9 @@ def p_error(p):
         print("Syntax error in input!", p, "line:", p.lexer.lineno)
         parser.errok()
 
+##########################_Debug_&_Running_#############################
+
 # Set up a logging object
-import logging
 logging.basicConfig(
     level = logging.DEBUG,
     filename = "parselog.txt",
@@ -146,10 +171,12 @@ logging.basicConfig(
 )
 log = logging.getLogger()
 
+# Build scanner and parser
 lexer = lex.lex()
 parser = yacc.yacc(debug=True, debuglog=log)
 
 # Read input
 data = open(sys.argv[1])
 
+# Parse input
 parser.parse(data.read())
