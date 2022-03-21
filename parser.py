@@ -48,8 +48,7 @@ tokens = [
     'PRIM',
 
     'DELIMITER',
-    'PLUS',
-    'MINUS',
+    'SIGN',
     'BINOP'
 ]
 
@@ -69,8 +68,7 @@ def t_error(t):
 t_ignore  = ' \t'
 t_INT = r'\d+'
 t_DELIMITER = r'\(|\)|\[|\]|\,|\;'
-t_PLUS = r'\+'
-t_MINUS = r'\-'
+t_SIGN = r'\+|\-'
 t_BINOP = r'\~|\*|\/|\=|\!=|\<|\>|\<=|\>=|\&|\||\:='
 
 # AlphaOther {AlphaOtherNumeric}*
@@ -82,12 +80,11 @@ def t_ID(t):
 
 ##########################_Parser_##############################
 
-# Parser grammar rules
+# Parser grammar rules TODO Implement semantic analyzer rules
 def p_exp(p):
     #  p[0]  p[1] p[2] p[3] p[4] p[5] p[6]
     '''exp : term
-           | term PLUS exp
-           | term MINUS exp
+           | term SIGN exp
            | term BINOP exp
            | IF exp THEN exp ELSE exp
            | LET defplus IN exp
@@ -100,8 +97,8 @@ def p_exp(p):
 def p_term(p):
     #  p[0]   p[1]   p[2]      p[3]    p[4]
     '''term : factor
+            | SIGN term
             | BINOP term
-            | MINUS term
             | factor DELIMITER explist DELIMITER
             | NULL
             | INT
@@ -160,7 +157,7 @@ def p_error(p):
         print("Syntax error in input!", p, "line:", p.lexer.lineno)
         parser.errok()
 
-##########################_Debug_&_Running_#############################
+##########################_Debug_&_Building_#############################
 
 # Set up a logging object
 logging.basicConfig(
@@ -171,11 +168,11 @@ logging.basicConfig(
 )
 log = logging.getLogger()
 
-# Build scanner and parser
+# Build scanner and parser with logger
 lexer = lex.lex()
 parser = yacc.yacc(debug=True, debuglog=log)
 
-# Read input
+# Open and Read input
 data = open(sys.argv[1])
 
 # Parse input
